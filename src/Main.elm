@@ -2,6 +2,9 @@ module Main exposing (main)
 
 import Browser
 import Html exposing (Html, div, text)
+import Http
+import Json.Decode exposing (Decoder, bool, decodeString, float, int, list, nullable, string, succeed)
+import Json.Decode.Pipeline exposing (hardcoded, optional, required)
 
 
 
@@ -9,11 +12,30 @@ import Html exposing (Html, div, text)
 
 
 type alias Model =
-    { thing : String }
+    { feed : Maybe Feed
+    }
+
+
+type alias Feed =
+    { results : List Movie
+    }
+
+
+type alias Movie =
+    { displayTitle : String
+    , headline : String
+    , summaryShort : String
+    , openingDate : String
+    , photo : MoviePhoto
+    }
+
+
+type alias MoviePhoto =
+    { src : String }
 
 
 type Msg
-    = NoOP
+    = LoadMovieFeed (Result Http.Error Feed)
 
 
 init : () -> ( Model, Cmd Msg )
@@ -23,7 +45,37 @@ init () =
 
 initialModel : Model
 initialModel =
-    { thing = "Hello" }
+    { feed = Nothing }
+
+
+fetchMovies : Cmd Msg
+fetchMovies =
+    Http.get
+        { url = "https://api.nytimes.com/svc/movies/v2/reviews/search.json?api-key=QJK7PuKhn7lC6DtyAeDUzwQ7MpYV3bsp"
+        , expect = Http.expectJson LoadMovieFeed feedDecoder
+        }
+
+
+feedDecoder : Decoder Feed
+feedDecoder =
+    succeed Feed
+        |> required "results" (list movieDecoder)
+
+
+movieDecoder : Decoder Movie
+movieDecoder =
+    succeed Movie
+        |> required "display_title" string
+        |> required "headline" string
+        |> required "summary_short" string
+        |> required "opening_date" string
+        |> required "multimedia" moviePhotoDecoder
+
+
+moviePhotoDecoder : Decoder MoviePhoto
+moviePhotoDecoder =
+    succeed MoviePhoto
+        |> required "src" string
 
 
 
@@ -33,7 +85,10 @@ initialModel =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOP ->
+        LoadMovieFeed (Ok feed) ->
+            ( { model | feed = Just feed }, Cmd.none )
+
+        LoadMovieFeed (Err errorMessage) ->
             ( model, Cmd.none )
 
 
@@ -43,7 +98,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ text "Hello" ]
+    text "Hello"
 
 
 
