@@ -40,7 +40,7 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( initialModel, Cmd.none )
+    ( initialModel, fetchMovies )
 
 
 initialModel : Model
@@ -98,7 +98,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    text "Hello"
+    div [] [ text model.feed ]
 
 
 
