@@ -38,11 +38,12 @@ type alias MoviePhoto =
 
 type Msg
     = LoadMovieFeed (Result Http.Error Feed)
+    | LoadMoreMovies (Result Http.Error Feed)
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( initialModel, fetchMovies )
+    ( initialModel, Cmd.batch [ fetchMovies, fetchMoreMovies ] )
 
 
 initialModel : Model
@@ -57,6 +58,14 @@ fetchMovies =
     Http.get
         { url = "https://api.nytimes.com/svc/movies/v2/reviews/search.json?api-key=QJK7PuKhn7lC6DtyAeDUzwQ7MpYV3bsp"
         , expect = Http.expectJson LoadMovieFeed resultDecoder
+        }
+
+
+fetchMoreMovies : Cmd Msg
+fetchMoreMovies =
+    Http.get
+        { url = "https://api.nytimes.com/svc/movies/v2/reviews/search.json?api-key=QJK7PuKhn7lC6DtyAeDUzwQ7MpYV3bsp"
+        , expect = Http.expectJson LoadMoreMovies resultDecoder
         }
 
 
@@ -93,6 +102,12 @@ update msg model =
             ( { model | feed = Just feed }, Cmd.none )
 
         LoadMovieFeed (Err error) ->
+            ( { model | error = Just error }, Cmd.none )
+
+        LoadMoreMovies (Ok feed) ->
+            ( { model | feed = Just feed }, Cmd.none )
+
+        LoadMoreMovies (Err error) ->
             ( { model | error = Just error }, Cmd.none )
 
 
