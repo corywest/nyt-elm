@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Debug exposing (log)
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (class)
 import Http
 import Json.Decode exposing (Decoder, bool, decodeString, float, int, list, nullable, string, succeed)
@@ -127,7 +127,12 @@ viewMovieFeed maybeFeed =
 
 viewMovieDetail : Movie -> Html Msg
 viewMovieDetail movie =
-    div [ class "movie" ] [ text movie.headline ]
+    div [ class "movie" ]
+        [ ul []
+            [ li [] [ text movie.displayTitle ]
+            , li [] [ text movie.headline ]
+            ]
+        ]
 
 
 errorMessage : Http.Error -> String
