@@ -88,7 +88,7 @@ moviePhotoDecoder =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "Error" msg of
+    case msg of
         LoadMovieFeed (Ok feed) ->
             ( { model | feed = Just feed }, Cmd.none )
 
