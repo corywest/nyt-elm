@@ -1,7 +1,9 @@
 module Main exposing (main)
 
 import Browser
+import Debug exposing (log)
 import Html exposing (Html, div, text)
+import Html.Attributes exposing (class)
 import Http
 import Json.Decode exposing (Decoder, bool, decodeString, float, int, list, nullable, string, succeed)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
@@ -13,20 +15,20 @@ import Json.Decode.Pipeline exposing (hardcoded, optional, required)
 
 type alias Model =
     { feed : Maybe Feed
+    , error : Maybe Http.Error
     }
 
 
 type alias Feed =
-    { results : List Movie
-    }
+    { results : List Movie }
 
 
 type alias Movie =
     { displayTitle : String
     , headline : String
     , summaryShort : String
-    , openingDate : String
-    , photo : MoviePhoto
+    , publicationDate : String
+    , multimedia : MoviePhoto
     }
 
 
@@ -45,19 +47,21 @@ init () =
 
 initialModel : Model
 initialModel =
-    { feed = Nothing }
+    { feed = Nothing
+    , error = Nothing
+    }
 
 
 fetchMovies : Cmd Msg
 fetchMovies =
     Http.get
         { url = "https://api.nytimes.com/svc/movies/v2/reviews/search.json?api-key=QJK7PuKhn7lC6DtyAeDUzwQ7MpYV3bsp"
-        , expect = Http.expectJson LoadMovieFeed feedDecoder
+        , expect = Http.expectJson LoadMovieFeed resultDecoder
         }
 
 
-feedDecoder : Decoder Feed
-feedDecoder =
+resultDecoder : Decoder Feed
+resultDecoder =
     succeed Feed
         |> required "results" (list movieDecoder)
 
@@ -68,7 +72,7 @@ movieDecoder =
         |> required "display_title" string
         |> required "headline" string
         |> required "summary_short" string
-        |> required "opening_date" string
+        |> required "publication_date" string
         |> required "multimedia" moviePhotoDecoder
 
 
@@ -84,12 +88,12 @@ moviePhotoDecoder =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case Debug.log "Error" msg of
         LoadMovieFeed (Ok feed) ->
             ( { model | feed = Just feed }, Cmd.none )
 
-        LoadMovieFeed (Err errorMessage) ->
-            ( model, Cmd.none )
+        LoadMovieFeed (Err error) ->
+            ( { model | error = Just error }, Cmd.none )
 
 
 
@@ -98,7 +102,37 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div [] [ text model.feed ]
+    div [] [ viewCheckMovieFeed model ]
+
+
+viewCheckMovieFeed : Model -> Html Msg
+viewCheckMovieFeed model =
+    case model.error of
+        Just err ->
+            div [] [ text (errorMessage err) ]
+
+        Nothing ->
+            viewMovieFeed model.feed
+
+
+viewMovieFeed : Maybe Feed -> Html Msg
+viewMovieFeed movies =
+    div [] (List.map viewMovieDetail movies)
+
+
+viewMovieDetail : List Movie -> Html Msg
+viewMovieDetail movie =
+    div [ class "movie" ] [ text "movie" ]
+
+
+errorMessage : Http.Error -> String
+errorMessage error =
+    case error of
+        Http.BadBody _ ->
+            "Sorry, something went wrong. Please try again later."
+
+        _ ->
+            "Sorry, we couldn't load your feed right now. Try again later"
 
 
 
