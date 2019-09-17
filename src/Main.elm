@@ -116,13 +116,18 @@ viewCheckMovieFeed model =
 
 
 viewMovieFeed : Maybe Feed -> Html Msg
-viewMovieFeed movies =
-    div [] (List.map viewMovieDetail movies)
+viewMovieFeed maybeFeed =
+    case maybeFeed of
+        Just feed ->
+            div [] (List.map viewMovieDetail feed.results)
+
+        Nothing ->
+            div [] [ text "Loading movies..." ]
 
 
-viewMovieDetail : List Movie -> Html Msg
+viewMovieDetail : Movie -> Html Msg
 viewMovieDetail movie =
-    div [ class "movie" ] [ text "movie" ]
+    div [ class "movie" ] [ text movie.headline ]
 
 
 errorMessage : Http.Error -> String
