@@ -2,8 +2,8 @@ module Main exposing (main)
 
 import Browser
 import Debug exposing (log)
-import Html exposing (Html, div, li, text, ul)
-import Html.Attributes exposing (class)
+import Html exposing (Html, div, img, li, text, ul)
+import Html.Attributes exposing (class, src)
 import Http
 import Json.Decode exposing (Decoder, bool, decodeString, float, int, list, nullable, string, succeed)
 import Json.Decode.Pipeline exposing (hardcoded, optional, required)
@@ -146,6 +146,8 @@ viewMovieDetail movie =
         [ ul []
             [ li [] [ text movie.displayTitle ]
             , li [] [ text movie.headline ]
+            , li [] [ text movie.summaryShort ]
+            , li [] [ img [ src movie.multimedia.src ] [] ]
             ]
         ]
 
